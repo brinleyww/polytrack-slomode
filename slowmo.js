@@ -79,35 +79,45 @@
         "  background: transparent;",
         "  height: 8px;",
         "}",
-        ".pt-speed-slider::-webkit-slider-runnable-track {",
-        "  height: 4px;",
-        "  border-radius: 2px;",
-        "  background: rgba(255,255,255,0.35);",
+        // The base game stylesheet has its own global
+        // input[type="range"]::-webkit-slider-thumb / ::-moz-range-thumb
+        // rules (32px square, thick border) which are MORE specific than a
+        // plain ".pt-speed-slider::-webkit-slider-thumb" selector, so they
+        // were winning and drawing the big square thumb over our styles.
+        // Prefixing with "input" matches that specificity, and !important
+        // guarantees it regardless of stylesheet order.
+        "input.pt-speed-slider::-webkit-slider-runnable-track {",
+        "  height: 4px !important;",
+        "  border-radius: 2px !important;",
+        "  background: rgba(255,255,255,0.35) !important;",
         "}",
-        ".pt-speed-slider::-moz-range-track {",
-        "  height: 4px;",
-        "  border-radius: 2px;",
-        "  background: rgba(255,255,255,0.35);",
+        "input.pt-speed-slider::-moz-range-track {",
+        "  height: 4px !important;",
+        "  border-radius: 2px !important;",
+        "  background: rgba(255,255,255,0.35) !important;",
         "}",
         // Default browser thumb sizes are roughly 16px (Chrome/WebKit) and
         // 12x20px (Firefox) — halved here to ~8px so it doesn't dominate
         // the small speed widget.
-        ".pt-speed-slider::-webkit-slider-thumb {",
+        "input.pt-speed-slider::-webkit-slider-thumb {",
         "  -webkit-appearance: none;",
         "  appearance: none;",
-        "  width: 8px;",
-        "  height: 8px;",
-        "  border-radius: 50%;",
-        "  background: #fff;",
+        "  width: 8px !important;",
+        "  height: 8px !important;",
+        "  border-radius: 50% !important;",
+        "  background: #fff !important;",
+        "  border: none !important;",
+        "  outline: none !important;",
         "  cursor: pointer;",
-        "  margin-top: -2px;", // recenters the 8px thumb on the 4px track above
+        "  margin-top: -2px !important;", // recenters the 8px thumb on the 4px track above
         "}",
-        ".pt-speed-slider::-moz-range-thumb {",
-        "  width: 8px;",
-        "  height: 8px;",
-        "  border-radius: 50%;",
-        "  background: #fff;",
-        "  border: none;",
+        "input.pt-speed-slider::-moz-range-thumb {",
+        "  width: 8px !important;",
+        "  height: 8px !important;",
+        "  border-radius: 50% !important;",
+        "  background: #fff !important;",
+        "  border: none !important;",
+        "  outline: none !important;",
         "  cursor: pointer;",
         "}"
     ].join("\n");
