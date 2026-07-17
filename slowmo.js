@@ -161,10 +161,31 @@
     const percentSign = document.createElement("span");
     percentSign.textContent = "%";
 
+    const resetButton = document.createElement("button");
+    resetButton.type = "button";
+    resetButton.textContent = "Reset";
+    resetButton.title = "Reset game speed to 100%";
+    resetButton.style.cssText = [
+        "margin-left:2px",
+        "background:rgba(255,255,255,0.1)",
+        "border:1px solid rgba(255,255,255,0.3)",
+        "border-radius:4px",
+        "color:#fff",
+        "font-family:sans-serif",
+        "font-size:12px",
+        "padding:2px 8px",
+        "cursor:pointer",
+        "pointer-events:auto"
+    ].join(";");
+    resetButton.addEventListener("mouseenter", () => { resetButton.style.background = "rgba(255,255,255,0.2)"; });
+    resetButton.addEventListener("mouseleave", () => { resetButton.style.background = "rgba(255,255,255,0.1)"; });
+    resetButton.addEventListener("click", () => applySpeed(100));
+
     container.appendChild(label);
     container.appendChild(slider);
     container.appendChild(textbox);
     container.appendChild(percentSign);
+    container.appendChild(resetButton);
 
     function mount() {
         document.body.appendChild(container);
