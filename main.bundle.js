@@ -41501,10 +41501,11 @@
         Ja = function() {
             const e = C.get(this, zr, "f").camera == C.get(this, wa, "f").cameraCockpit;
             if (this.__editorTrail && this.__editorTrail.points.length > 0) {
-                window.__editorTrailData = { points: this.__editorTrail.points.slice() };
+                window.__editorTrailData = { points: this.__editorTrail.points.slice(), snapshots: this.__editorTrail.snapshots.slice() };
             }
             if (this.__editorTrail) {
                 this.__editorTrail.points = [];
+                this.__editorTrail.snapshots = [];
                 this.__editorTrail.frameCounter = 0;
             }
             window.__ptOnBeforeReset && window.__ptOnBeforeReset(C.get(this, wa, "f")),
@@ -42238,10 +42239,13 @@
                 C.get(this, _r, "m", Ya).call(this),
                 (() => {
                     if (!C.get(this, jr, "f")) {
+                        const _snapshotEvery = parseInt(localStorage.getItem("editorTrailSnapshotEvery") || "15", 10);
                         this.__editorTrail = {
                             points: [],
+                            snapshots: [],
                             frameCounter: 0,
-                            sampleEvery: 3
+                            sampleEvery: 3,
+                            snapshotEvery: isNaN(_snapshotEvery) ? 15 : Math.max(1, _snapshotEvery)
                         };
                     }
                 })(),
@@ -42435,7 +42439,7 @@
                 (() => {
                     const trail = this.__editorTrail;
                     if (trail && trail.points.length > 0) {
-                        window.__editorTrailData = { points: trail.points.slice() };
+                        window.__editorTrailData = { points: trail.points.slice(), snapshots: trail.snapshots.slice() };
                     }
                     this.__editorTrail = null;
                 })(),
@@ -42470,6 +42474,13 @@
                         if (trail.frameCounter % trail.sampleEvery !== 0) return;
                         const pos = C.get(this, wa, "f").getPosition();
                         trail.points.push(pos.x, pos.y + .25, pos.z);
+                        if (trail.frameCounter % trail.snapshotEvery === 0) {
+                            const q = C.get(this, wa, "f").getQuaternion();
+                            trail.snapshots.push({
+                                pos: { x: pos.x, y: pos.y + .25, z: pos.z },
+                                quat: { x: q.x, y: q.y, z: q.z, w: q.w }
+                            });
+                        }
                     })(),
                     C.get(this, Ba, "f").isEnabled && null == C.get(this, Sa, "f") ? (C.get(this, wa, "f").isPaused = !0,
                     C.get(this, wa, "f").audioVolume = 0) : (C.get(this, wa, "f").isPaused = !1,
