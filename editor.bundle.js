@@ -1425,6 +1425,18 @@
         confirmExit = function(t) {
             const e = () => {
                 get(this, editor_transitionManager, "f").trigger(( () => {
+                    window.__editorTrailData = null;
+                    if (this.__editorTrailGroup) {
+                        get(this, editor_renderer, "f").scene.remove(this.__editorTrailGroup);
+                        this.__editorTrailGroup.traverse(obj => {
+                            if (obj.geometry) obj.geometry.dispose();
+                            if (obj.material) {
+                                const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                                for (const m of mats) m.dispose();
+                            }
+                        });
+                        this.__editorTrailGroup = null;
+                    }
                     set(this, editor_isSaved, !0, "f"),
                     get(this, Ft, "m", setTrackName).call(this, null),
                     t(),
@@ -3099,11 +3111,59 @@
                 get(this, editor_checkpointLabels3D, "f")?.dispose(),
                 set(this, editor_checkpointLabels3D, new N(get(this, editor_renderer, "f")), "f"),
                 get(this, editor_checkpointLabels3D, "f").refresh(get(this, editor_track, "f")),
+                (() => {
+                    if (this.__editorTrailGroup) {
+                        get(this, editor_renderer, "f").scene.remove(this.__editorTrailGroup);
+                        this.__editorTrailGroup.traverse(obj => {
+                            if (obj.geometry) obj.geometry.dispose();
+                            if (obj.material) {
+                                const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                                for (const m of mats) m.dispose();
+                            }
+                        });
+                        this.__editorTrailGroup = null;
+                    }
+                    const data = window.__editorTrailData;
+                    if (!data || !data.points || data.points.length < 6) return;
+                    const vectors = [];
+                    for (let i = 0; i < data.points.length; i += 3) {
+                        vectors.push(new THREE.Vector3(data.points[i], data.points[i + 1], data.points[i + 2]));
+                    }
+                    if (vectors.length < 2) return;
+                    const geo = new THREE.BufferGeometry().setFromPoints(vectors);
+                    const mat = new THREE.LineBasicMaterial({
+                        color: 0x00ff44,
+                        transparent: true,
+                        opacity: 0.85,
+                        depthTest: false
+                    });
+                    const line = new THREE.Line(geo, mat);
+                    line.renderOrder = 998;
+                    line.frustumCulled = false;
+                    const group = new THREE.Group();
+                    group.add(line);
+                    get(this, editor_renderer, "f").scene.add(group);
+                    this.__editorTrailGroup = group;
+                    window.__editorTrailData = null;
+                })(),
                 get(this, editor_sideToolbar, "f").show(),
                 get(this, editor_containerElement, "f").className = "editor-ui"
             }
             disable() {
                 set(this, editor_isActive, !1, "f"),
+                (() => {
+                    if (this.__editorTrailGroup) {
+                        get(this, editor_renderer, "f").scene.remove(this.__editorTrailGroup);
+                        this.__editorTrailGroup.traverse(obj => {
+                            if (obj.geometry) obj.geometry.dispose();
+                            if (obj.material) {
+                                const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                                for (const m of mats) m.dispose();
+                            }
+                        });
+                        this.__editorTrailGroup = null;
+                    }
+                })(),
                 get(this, editor_previewGroup, "f").visible = !1,
                 set(this, editor_isCopyMode, !1, "f"),
                 set(this, editor_isCutMode, !1, "f"),

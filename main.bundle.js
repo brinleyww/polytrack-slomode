@@ -41500,6 +41500,13 @@
         ,
         Ja = function() {
             const e = C.get(this, zr, "f").camera == C.get(this, wa, "f").cameraCockpit;
+            if (this.__editorTrail && this.__editorTrail.points.length > 0) {
+                window.__editorTrailData = { points: this.__editorTrail.points.slice() };
+            }
+            if (this.__editorTrail) {
+                this.__editorTrail.points = [];
+                this.__editorTrail.frameCounter = 0;
+            }
             window.__ptOnBeforeReset && window.__ptOnBeforeReset(C.get(this, wa, "f")),
             C.get(this, wa, "f").dispose(),
             C.set(this, wa, C.get(this, _r, "m", Xa).call(this, e), "f")
@@ -42229,6 +42236,15 @@
                 const I = C.get(this, Gr, "f").getSettingBoolean(R.A.DefaultCameraMode);
                 if (C.set(this, wa, C.get(this, _r, "m", Xa).call(this, I), "f"),
                 C.get(this, _r, "m", Ya).call(this),
+                (() => {
+                    if (!C.get(this, jr, "f")) {
+                        this.__editorTrail = {
+                            points: [],
+                            frameCounter: 0,
+                            sampleEvery: 3
+                        };
+                    }
+                })(),
                 window.addEventListener("keydown", C.set(this, Na, (e => {
                     if (!P.ip()) {
                         if (!C.get(this, Ba, "f").isEnabled && !C.get(this, _r, "m", Ha).call(this))
@@ -42416,6 +42432,13 @@
                 e && C.get(this, Pr, "f").clear(),
                 C.get(this, Ir, "f").clearMountains(),
                 C.get(this, ya, "f").dispose(),
+                (() => {
+                    const trail = this.__editorTrail;
+                    if (trail && trail.points.length > 0) {
+                        window.__editorTrailData = { points: trail.points.slice() };
+                    }
+                    this.__editorTrail = null;
+                })(),
                 C.get(this, wa, "f").dispose();
                 for (const e of C.get(this, xa, "f"))
                     e.car?.dispose(),
@@ -42439,6 +42462,15 @@
                 t) {
                     if (C.get(this, wa, "f").update(n),
                     C.get(this, wa, "f").updateCameras(n),
+                    (() => {
+                        const trail = this.__editorTrail;
+                        if (!trail) return;
+                        if (!C.get(this, wa, "f").hasStarted() || C.get(this, wa, "f").hasFinished()) return;
+                        trail.frameCounter++;
+                        if (trail.frameCounter % trail.sampleEvery !== 0) return;
+                        const pos = C.get(this, wa, "f").getPosition();
+                        trail.points.push(pos.x, pos.y + .25, pos.z);
+                    })(),
                     C.get(this, Ba, "f").isEnabled && null == C.get(this, Sa, "f") ? (C.get(this, wa, "f").isPaused = !0,
                     C.get(this, wa, "f").audioVolume = 0) : (C.get(this, wa, "f").isPaused = !1,
                     C.get(this, wa, "f").audioVolume = 1),
