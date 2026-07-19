@@ -7290,7 +7290,10 @@
                 e[e.CheckpointVolume = 20] = "CheckpointVolume",
                 e[e.GhostCarSoundsEnabled = 21] = "GhostCarSoundsEnabled",
                 e[e.VibrationEnabled = 22] = "VibrationEnabled",
-                e[e.TouchSteeringSide = 23] = "TouchSteeringSide"
+                e[e.TouchSteeringSide = 23] = "TouchSteeringSide",
+                e[e.EditorTrailEnabled = 24] = "EditorTrailEnabled",
+                e[e.EditorTrailHitboxEnabled = 25] = "EditorTrailHitboxEnabled",
+                e[e.EditorTrailSnapshotInterval = 26] = "EditorTrailSnapshotInterval"
             }(i || (i = {}));
             const r = i
         }
@@ -42239,7 +42242,7 @@
                 C.get(this, _r, "m", Ya).call(this),
                 (() => {
                     if (!C.get(this, jr, "f")) {
-                        const _snapshotEvery = parseInt(localStorage.getItem("editorTrailSnapshotEvery") || "15", 10);
+                        const _snapshotEvery = C.get(this, Gr, "f").getSettingInteger(R.A.EditorTrailSnapshotInterval);
                         this.__editorTrail = {
                             points: [],
                             snapshots: [],
@@ -48667,6 +48670,48 @@
                 title: gs.getFromLanguage(C.get(this, Cs, "f"), "Right"),
                 value: "true"
             }], R.A.TouchSteeringSide),
+            C.get(this, ms, "m", Bs).call(this, gs.getFromLanguage(C.get(this, Cs, "f"), "Editor trail")),
+            C.get(this, ms, "m", Gs).call(this, gs.getFromLanguage(C.get(this, Cs, "f"), "Driven path"), [{
+                title: gs.getFromLanguage(C.get(this, Cs, "f"), "Off"),
+                value: "false"
+            }, {
+                title: gs.getFromLanguage(C.get(this, Cs, "f"), "On"),
+                value: "true"
+            }], R.A.EditorTrailEnabled),
+            C.get(this, ms, "m", Gs).call(this, gs.getFromLanguage(C.get(this, Cs, "f"), "Car hitbox markers"), [{
+                title: gs.getFromLanguage(C.get(this, Cs, "f"), "Off"),
+                value: "false"
+            }, {
+                title: gs.getFromLanguage(C.get(this, Cs, "f"), "On"),
+                value: "true"
+            }], R.A.EditorTrailHitboxEnabled),
+            ( () => {
+                const label = gs.getFromLanguage(C.get(this, Cs, "f"), "Hitbox marker interval (frames)")
+                  , key = R.A.EditorTrailSnapshotInterval;
+                let cur = parseInt(C.get(this, Ps, "f").get(key) ?? C.get(this, bs, "f").getSetting(key), 10);
+                (isNaN(cur)) && (cur = 15),
+                cur = Math.min(60, Math.max(1, cur));
+                const row = document.createElement("div");
+                row.className = "setting";
+                const p = document.createElement("p");
+                p.textContent = label + ": " + cur,
+                row.appendChild(p);
+                const input = document.createElement("input");
+                input.type = "range",
+                input.min = "1",
+                input.max = "60",
+                input.step = "1",
+                input.value = String(cur),
+                input.addEventListener("input", ( () => {
+                    p.textContent = label + ": " + input.value,
+                    C.get(this, Ps, "f").set(key, input.value),
+                    C.get(this, bs, "f").updateSettings(Array.from(C.get(this, Ps, "f")))
+                }
+                )),
+                row.appendChild(input),
+                C.get(this, ks, "f").appendChild(row)
+            }
+            )(),
             C.get(this, ms, "m", Ds).call(this, gs.getFromLanguage(C.get(this, Cs, "f"), "Graphics")),
             C.get(this, ms, "m", Gs).call(this, gs.getFromLanguage(C.get(this, Cs, "f"), "Shadows"), [{
                 title: gs.getFromLanguage(C.get(this, Cs, "f"), "Off"),
@@ -55330,7 +55375,7 @@
                 null != n && C.get(this, Mu, "m", Pu).call(this, n)
             }
             defaultSettings() {
-                return new Map([[R.A.ImperialUnitsEnabled, "false"], [R.A.ResetHintEnabled, "true"], [R.A.GhostCarEnabled, "true"], [R.A.DefaultCameraMode, "false"], [R.A.CockpitCameraToggle, "true"], [R.A.Checkpoints, "bottom"], [R.A.Timer, "bottom"], [R.A.Speedometer, "bottom"], [R.A.Language, "en-US"], [R.A.ShadowQuality, "2"], [R.A.CloudsEnabled, "true"], [R.A.ParticlesEnabled, "true"], [R.A.SkidmarksEnabled, "true"], [R.A.FogEnabled, "true"], [R.A.RenderScale, "1"], [R.A.ScreenPixelDensity, "true"], [R.A.Antialiasing, "true"], [R.A.MasterVolume, "1"], [R.A.SoundEffectVolume, "1"], [R.A.MusicVolume, "1"], [R.A.CheckpointVolume, "1"], [R.A.GhostCarSoundsEnabled, "true"], [R.A.VibrationEnabled, "false"], [R.A.TouchSteeringSide, "true"]])
+                return new Map([[R.A.ImperialUnitsEnabled, "false"], [R.A.ResetHintEnabled, "true"], [R.A.GhostCarEnabled, "true"], [R.A.DefaultCameraMode, "false"], [R.A.CockpitCameraToggle, "true"], [R.A.Checkpoints, "bottom"], [R.A.Timer, "bottom"], [R.A.Speedometer, "bottom"], [R.A.Language, "en-US"], [R.A.ShadowQuality, "2"], [R.A.CloudsEnabled, "true"], [R.A.ParticlesEnabled, "true"], [R.A.SkidmarksEnabled, "true"], [R.A.FogEnabled, "true"], [R.A.RenderScale, "1"], [R.A.ScreenPixelDensity, "true"], [R.A.Antialiasing, "true"], [R.A.MasterVolume, "1"], [R.A.SoundEffectVolume, "1"], [R.A.MusicVolume, "1"], [R.A.CheckpointVolume, "1"], [R.A.GhostCarSoundsEnabled, "true"], [R.A.VibrationEnabled, "false"], [R.A.TouchSteeringSide, "true"], [R.A.EditorTrailEnabled, "true"], [R.A.EditorTrailHitboxEnabled, "true"], [R.A.EditorTrailSnapshotInterval, "15"]])
             }
             defaultKeyBindings() {
                 return new Map([[KeyBind.VehicleAccelerate, ["KeyW", "ArrowUp"]], [KeyBind.VehicleTurnRight, ["KeyD", "ArrowRight"]], [KeyBind.VehicleBrake, ["KeyS", "ArrowDown"]], [KeyBind.VehicleTurnLeft, ["KeyA", "ArrowLeft"]], [KeyBind.VehicleCheckpointReset, ["KeyR", "Enter"]], [KeyBind.VehicleStartReset, ["KeyT", "Backspace"]], [KeyBind.VehicleCockpitCamera, ["KeyC", "KeyM"]], [KeyBind.ToggleUI, ["KeyH", null]], [KeyBind.Pause, ["KeyP", "Space"]], [KeyBind.EditorRotatePart, ["KeyR", "Space"]], [KeyBind.EditorHeightModifier, ["ShiftLeft", "ShiftRight"]], [KeyBind.EditorDelete, ["Delete", "KeyX"]], [KeyBind.EditorMoveForwards, ["KeyW", "ArrowUp"]], [KeyBind.EditorMoveRight, ["KeyD", "ArrowRight"]], [KeyBind.EditorMoveBackwards, ["KeyS", "ArrowDown"]], [KeyBind.EditorMoveLeft, ["KeyA", "ArrowLeft"]], [KeyBind.EditorRotateViewUp, ["KeyY", null]], [KeyBind.EditorRotateViewDown, ["KeyH", null]], [KeyBind.EditorRotateViewLeft, ["KeyQ", null]], [KeyBind.EditorRotateViewRight, ["KeyE", null]], [KeyBind.EditorMoveDown, ["KeyZ", null]], [KeyBind.EditorMoveUp, ["KeyC", null]], [KeyBind.EditorTest, ["KeyT", null]], [KeyBind.EditorPick, ["KeyG", null]], [KeyBind.ToggleFpsCounter, ["Equal", null]], [KeyBind.ToggleSpectatorCamera, ["Slash", null]], [KeyBind.SpectatorMoveForwards, ["KeyW", "ArrowUp"]], [KeyBind.SpectatorMoveRight, ["KeyD", "ArrowRight"]], [KeyBind.SpectatorMoveBackwards, ["KeyS", "ArrowDown"]], [KeyBind.SpectatorMoveLeft, ["KeyA", "ArrowLeft"]], [KeyBind.SpectatorSpeedModifier, ["ShiftLeft", "ShiftRight"]], [KeyBind.PreviewStepForward, ["Period", null]], [KeyBind.PreviewStepBack, ["Comma", null]]])

@@ -988,63 +988,6 @@
                 }
                 )),
                 M.appendChild(L);
-                const _trailToggleDiv = document.createElement("div");
-                _trailToggleDiv.className = "setting",
-                f.appendChild(_trailToggleDiv);
-                const _trailToggleLabel = document.createElement("label");
-                _trailToggleLabel.className = "title";
-                _trailToggleLabel.append(document.createTextNode("Show driven path"));
-                _trailToggleDiv.appendChild(_trailToggleLabel);
-                const _trailToggleBtn = document.createElement("button");
-                _trailToggleBtn.className = "button";
-                _trailToggleBtn.style.cssText = "font-size:24px;padding:8px 24px;";
-                const _trailOn = localStorage.getItem("editorTrailEnabled") !== "0";
-                _trailToggleBtn.textContent = _trailOn ? "On" : "Off";
-                _trailToggleBtn.addEventListener("click", () => {
-                    const cur = localStorage.getItem("editorTrailEnabled") !== "0";
-                    localStorage.setItem("editorTrailEnabled", cur ? "0" : "1");
-                    _trailToggleBtn.textContent = cur ? "Off" : "On";
-                });
-                _trailToggleDiv.appendChild(_trailToggleBtn);
-                const _hitboxToggleDiv = document.createElement("div");
-                _hitboxToggleDiv.className = "setting",
-                f.appendChild(_hitboxToggleDiv);
-                const _hitboxToggleLabel = document.createElement("label");
-                _hitboxToggleLabel.className = "title";
-                _hitboxToggleLabel.append(document.createTextNode("Show car hitbox markers"));
-                _hitboxToggleDiv.appendChild(_hitboxToggleLabel);
-                const _hitboxToggleBtn = document.createElement("button");
-                _hitboxToggleBtn.className = "button";
-                _hitboxToggleBtn.style.cssText = "font-size:24px;padding:8px 24px;";
-                const _hitboxOn = localStorage.getItem("editorTrailHitboxEnabled") !== "0";
-                _hitboxToggleBtn.textContent = _hitboxOn ? "On" : "Off";
-                _hitboxToggleBtn.addEventListener("click", () => {
-                    const cur = localStorage.getItem("editorTrailHitboxEnabled") !== "0";
-                    localStorage.setItem("editorTrailHitboxEnabled", cur ? "0" : "1");
-                    _hitboxToggleBtn.textContent = cur ? "Off" : "On";
-                });
-                _hitboxToggleDiv.appendChild(_hitboxToggleBtn);
-                const _snapDiv = document.createElement("div");
-                _snapDiv.className = "setting",
-                f.appendChild(_snapDiv);
-                const _snapLabel = document.createElement("label");
-                _snapLabel.className = "title";
-                _snapLabel.append(document.createTextNode("Hitbox marker interval (frames): "));
-                const _snapVal = parseInt(localStorage.getItem("editorTrailSnapshotEvery") || "15", 10);
-                const _snapDisplay = document.createTextNode(String(isNaN(_snapVal) ? 15 : _snapVal));
-                _snapLabel.appendChild(_snapDisplay),
-                _snapDiv.appendChild(_snapLabel);
-                const _snapInput = document.createElement("input");
-                _snapInput.type = "range",
-                _snapInput.min = "1",
-                _snapInput.max = "60",
-                _snapInput.step = "1",
-                _snapInput.value = String(isNaN(_snapVal) ? 15 : Math.max(1, _snapVal)),
-                _snapInput.addEventListener("input", (() => {
-                    _snapDisplay.textContent = _snapInput.value;
-                    localStorage.setItem("editorTrailSnapshotEvery", _snapInput.value);
-                })),
-                _snapDiv.appendChild(_snapInput);
                 const P = document.createElement("div");
                 P.className = "button-wrapper",
                 d.appendChild(P);
@@ -3169,6 +3112,7 @@
                 set(this, editor_checkpointLabels3D, new N(get(this, editor_renderer, "f")), "f"),
                 get(this, editor_checkpointLabels3D, "f").refresh(get(this, editor_track, "f")),
                 (() => {
+                  try {
                     if (this.__editorTrailGroup) {
                         get(this, editor_renderer, "f").scene.remove(this.__editorTrailGroup);
                         this.__editorTrailGroup.traverse(obj => {
@@ -3182,8 +3126,11 @@
                     }
                     const data = window.__editorTrailData;
                     if (!data) return;
-                    const _trailEnabled = localStorage.getItem("editorTrailEnabled") !== "0";
-                    const _hitboxEnabled = localStorage.getItem("editorTrailHitboxEnabled") !== "0";
+                    // 24 = Setting.EditorTrailEnabled, 25 = Setting.EditorTrailHitboxEnabled
+                    // (numeric values shared with the enum added in main.bundle.js; this
+                    // bundle doesn't import that enum module, so we use the raw values)
+                    const _trailEnabled = get(this, editor_settingsManager, "f").getSettingBoolean(24);
+                    const _hitboxEnabled = get(this, editor_settingsManager, "f").getSettingBoolean(25);
                     const group = new THREE.Group();
                     let built = false;
                     if (_trailEnabled && data.points && data.points.length >= 6) {
@@ -3207,27 +3154,49 @@
                         }
                     }
                     if (_hitboxEnabled && data.snapshots && data.snapshots.length > 0) {
-                        // Approximate car hitbox — the editor bundle doesn't have a
-                        // handle on the actual collision mesh, so this is a fixed
-                        // box roughly matching the car's footprint, not an exact hull.
-                        const HITBOX_WIDTH = 1.7, HITBOX_HEIGHT = 0.9, HITBOX_LENGTH = 3.4;
-                        const boxGeo = new THREE.BoxGeometry(HITBOX_WIDTH, HITBOX_HEIGHT, HITBOX_LENGTH);
-                        const edgesGeo = new THREE.EdgesGeometry(boxGeo);
-                        boxGeo.dispose();
-                        const edgeMat = new THREE.LineBasicMaterial({
-                            color: 0x00ff44,
-                            transparent: true,
-                            opacity: 0.7,
-                            depthTest: false
-                        });
-                        for (const snap of data.snapshots) {
-                            const box = new THREE.LineSegments(edgesGeo, edgeMat);
-                            box.position.set(snap.pos.x, snap.pos.y, snap.pos.z);
-                            box.quaternion.set(snap.quat.x, snap.quat.y, snap.quat.z, snap.quat.w);
-                            box.renderOrder = 998;
-                            box.frustumCulled = false;
-                            group.add(box);
-                            built = true;
+                        try {
+                            // Approximate car hitbox — the editor bundle doesn't have a
+                            // handle on the actual collision mesh, so this is a fixed
+                            // box roughly matching the car's footprint, not an exact hull.
+                            // Built from plain Line edges rather than
+                            // BoxGeometry/EdgesGeometry/LineSegments, since this bundle's
+                            // THREE namespace doesn't include those classes.
+                            const HITBOX_WIDTH = 1.7, HITBOX_HEIGHT = 0.9, HITBOX_LENGTH = 3.4;
+                            const hw = HITBOX_WIDTH / 2, hh = HITBOX_HEIGHT / 2, hl = HITBOX_LENGTH / 2;
+                            const corners = [
+                                [-hw, -hh, -hl], [hw, -hh, -hl], [hw, -hh, hl], [-hw, -hh, hl],
+                                [-hw, hh, -hl], [hw, hh, -hl], [hw, hh, hl], [-hw, hh, hl]
+                            ];
+                            const edgeIndices = [
+                                [0, 1], [1, 2], [2, 3], [3, 0],
+                                [4, 5], [5, 6], [6, 7], [7, 4],
+                                [0, 4], [1, 5], [2, 6], [3, 7]
+                            ];
+                            const edgeGeos = edgeIndices.map(([a, b]) => new THREE.BufferGeometry().setFromPoints([
+                                new THREE.Vector3(corners[a][0], corners[a][1], corners[a][2]),
+                                new THREE.Vector3(corners[b][0], corners[b][1], corners[b][2])
+                            ]));
+                            const edgeMat = new THREE.LineBasicMaterial({
+                                color: 0x00ff44,
+                                transparent: true,
+                                opacity: 0.7,
+                                depthTest: false
+                            });
+                            for (const snap of data.snapshots) {
+                                const boxGroup = new THREE.Group();
+                                for (const geo of edgeGeos) {
+                                    const line = new THREE.Line(geo, edgeMat);
+                                    line.renderOrder = 998;
+                                    line.frustumCulled = false;
+                                    boxGroup.add(line);
+                                }
+                                boxGroup.position.set(snap.pos.x, snap.pos.y, snap.pos.z);
+                                boxGroup.quaternion.set(snap.quat.x, snap.quat.y, snap.quat.z, snap.quat.w);
+                                group.add(boxGroup);
+                                built = true;
+                            }
+                        } catch (err) {
+                            console.warn("[slomode] failed to build hitbox markers:", err);
                         }
                     }
                     if (built) {
@@ -3235,6 +3204,10 @@
                         this.__editorTrailGroup = group;
                     }
                     window.__editorTrailData = null;
+                  } catch (err) {
+                      console.warn("[slomode] failed to build driven-path trail:", err);
+                      window.__editorTrailData = null;
+                  }
                 })(),
                 get(this, editor_sideToolbar, "f").show(),
                 get(this, editor_containerElement, "f").className = "editor-ui"
